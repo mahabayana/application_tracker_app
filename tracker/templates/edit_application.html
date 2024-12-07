@@ -1,0 +1,12 @@
+{% block content %}
+<h2>Edit Application</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Update</button>
+    <a href="{% url 'application_list' %}"><button type="button">Cancel</button></a>
+</form>
+
+{% endblock %}
+

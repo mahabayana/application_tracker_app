@@ -1,0 +1,59 @@
+{% extends 'home.html' %}
+{% block content %}
+
+<h2>Job Applications</h2>
+
+<form method="post" action="{% url 'add_application' %}">
+    {% csrf_token %}
+    <input type="text" name="company" placeholder="Company Name" required>
+    <input type="text" name="position" placeholder="Position" required>
+    <input type="date" name="date_applied" required>
+    <select name="status">
+        <option value="Applied">Applied</option>
+        <option value="Interviewing">Interviewed</option>
+        <option value="Offer Received">Offer Received</option>
+        <option value="Rejected">Rejected</option>
+    </select>
+    <input type="text" name="skills" placeholder="Add Skills (separate by commas)" required>
+    <button type="submit">Add Application</button>
+</form>
+
+<form method="post" action="{% url 'delete_application' %}">
+    {% csrf_token %}
+    <table>
+        <tr>
+            <th>Select</th>
+            <th>Company</th>
+            <th>Position</th>
+            <th>Date Applied</th>
+            <th>Status</th>
+            <th>Skills</th>
+
+        </tr>
+        {% for application in applications %}
+        <tr>
+            <td><input type="checkbox" name="applications" value="{{ application.app_id }}"></td>
+            <td>{{ application.company }}</td>
+            <td>{{ application.position }}</td>
+            <td>{{ application.date_applied }}</td>
+            <td>{{ application.status }}</td>
+            <td>{{ application.skills }}</td>
+            
+            <td>
+                <a href="{% url 'edit_application' application.app_id %}">
+                    <button type="button">Edit</button>
+                </a>
+            </td>
+
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">No applications - Did not apply to any jobs currently</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <button type="submit">Delete Application(s)</button>
+</form>
+
+
+{% endblock %}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Analysis</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2>Application Analysis</h2>
+
+    <div class="form-group">
+        <label for="skillsInput">Enter Skills (comma separated):</label>
+        <input type="text" class="form-control" id="skillsInput" placeholder="java, python, C">
+    </div>
+
+    <button id="generateReport" class="btn btn-primary">Generate Report</button>
+
+    <h3 class="mt-5">Matched Applications:</h3>
+    <table class="table table-bordered" id="applicationsTable">
+        <thead>
+            <tr>
+                <th>Application ID</th>
+                <th>Company</th>
+                <th>Position</th>
+                <th>Match Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <div class="form-group mt-4">
+        <label for="startDateInput">Start Date:</label>
+        <input type="date" class="form-control" id="startDateInput">
+    </div>
+
+    <div class="form-group">
+        <label for="endDateInput">End Date:</label>
+        <input type="date" class="form-control" id="endDateInput">
+    </div>
+
+    <button id="countApplications" class="btn btn-secondary mt-3">How many applications in this time frame?</button>
+    <div id="applicationCount" class="mt-3"></div>
+
+    <button id="generateReport2" class="btn btn-info mt-4">Generate Report 2</button>
+    <div id="report2Results" class="mt-4"></div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        //generate report for matches 
+        $('#generateReport').on('click', function () {
+            var skills = $('#skillsInput').val();  
+            if (skills.trim() === '') {
+                alert('Please enter some skills!');
+                return;
+            }
+
+            $.ajax({
+                url: '{% url "generate_report" %}',  
+                type: 'GET',
+                data: {
+                    skills: skills 
+                },
+                success: function (response) {
+                    $('#applicationsTable tbody').empty();
+
+                    if (response.applications && response.applications.length > 0) {
+                        response.applications.forEach(function (app) {
+                            var row = '<tr>';
+                            row += '<td>' + app.application_id + '</td>';
+                            row += '<td>' + app.company + '</td>';
+                            row += '<td>' + app.position + '</td>';
+                            row += '<td>' + app.match_percentage + '%</td>';
+                            row += '</tr>';
+                            $('#applicationsTable tbody').append(row);
+                        });
+                    } else {
+                        $('#applicationsTable tbody').append('<tr><td colspan="4">No applications found with match percentage > 80%.</td></tr>');
+                    }
+                },
+                error: function () {
+                    alert('An error occurred while generating the report.');
+                }
+            });
+        });
+
+        //Application count response 
+        $('#countApplications').on('click', function () {
+            const startDate = $('#startDateInput').val();
+            const endDate = $('#endDateInput').val();
+
+            if (!startDate || !endDate) {
+                alert('Please provide both start and end dates!');
+                return;
+            }
+
+            $.ajax({
+                url: '{% url "count_applications" %}',  
+                type: 'GET',
+                data: {
+                    start_date: startDate,
+                    end_date: endDate
+                },
+                success: function (response) {
+                    $('#applicationCount').html(
+                        'Total Applications: ' + response.application_count
+                    );
+                },
+                error: function () {
+                    alert('An error occurred while fetching the application count.');
+                }
+            });
+        });
+
+        //generate report 2 - status pool numbers 
+        $('#generateReport2').on('click', function () {
+            $.ajax({
+                url: '{% url "generate_report_two" %}', 
+                type: 'GET',
+                success: function (response) {
+                    console.log(response)
+                    $('#report2Results').empty();
+
+                    var results = `
+                        <h4>Application Status Counts:</h4>
+                        <ul>
+                            <li>Interviewed: ${response.interviewed_count}</li>
+                            <li>Offer Received: ${response.offer_received_count}</li>
+                            <li>Rejected: ${response.rejected_count}</li>
+                            <li>Total Applications: ${response.total_count}</li>
+                        </ul>
+                    `;
+                    $('#report2Results').html(results);
+                },
+                error: function () {
+                    alert('An error occurred while generating the report.');
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
